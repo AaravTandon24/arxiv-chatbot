@@ -70,7 +70,7 @@ export default function Chat() {
               type="submit"
               className="px-4 py-2 bg-gray-700 text-white rounded-r hover:bg-gray-600"
             >
-              Ask
+              Set Paper
             </button>
           </form>
         </div>
