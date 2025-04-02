@@ -1,5 +1,5 @@
 "use client";
-//balls
+//ball
 import { useState } from "react";
 import { summarise } from "./actions";
 
