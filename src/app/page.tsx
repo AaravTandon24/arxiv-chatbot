@@ -1,5 +1,4 @@
 "use client";
-// Yo Aarav
 
 import { useState } from "react";
 import { summarise } from "./actions";
