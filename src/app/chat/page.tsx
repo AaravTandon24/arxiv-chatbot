@@ -4,6 +4,7 @@ import { type CoreMessage } from "ai";
 import { useState } from "react";
 import { continueConversation, chatbot } from "../actions";
 import { readStreamableValue } from "ai/rsc";
+import Link from "next/link"; // ✅ Import Link
 
 export const maxDuration = 30;
 
@@ -56,50 +57,66 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-black">
-      <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch bg-black text-white">
-        <div className="mb-4">
-          <form onSubmit={handlePaperUrlSubmit} className="flex justify-center">
-            <input
-              className="flex-grow p-2 border border-gray-600 rounded-l bg-gray-800 text-gray-300 placeholder-gray-500 focus:outline-none"
-              value={paperUrl}
-              placeholder="Arxiv Link"
-              onChange={(e) => setPaperUrl(e.target.value)}
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-gray-700 text-white rounded-r hover:bg-gray-600"
-            >
-              Ask
-            </button>
-          </form>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-black to-gray-900 text-white px-4">
+      <div className="flex flex-col w-full max-w-2xl bg-neutral-900 rounded-2xl shadow-xl p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Arxiv Chatbot</h1>
+          <Link
+            href="/"
+            className="text-sm bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-md font-medium transition"
+          >
+            ← Back to Home
+          </Link>
         </div>
 
+        <form onSubmit={handlePaperUrlSubmit} className="flex gap-2 mb-4">
+          <input
+            className="flex-grow px-4 py-2 rounded-md bg-gray-800 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            value={paperUrl}
+            placeholder="Paste Arxiv link here..."
+            onChange={(e) => setPaperUrl(e.target.value)}
+          />
+          <button
+            type="submit"
+            className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-md font-semibold"
+          >
+            Load
+          </button>
+        </form>
+
         {currentPaperUrl && (
-          <div className="mb-4 p-2 bg-gray-800 rounded text-gray-300">
-            Current paper: {currentPaperUrl}
+          <div className="mb-4 p-3 bg-gray-800 text-sm rounded-md border border-gray-700">
+            <span className="text-gray-400">Current paper:</span>{" "}
+            {currentPaperUrl}
           </div>
         )}
 
-        <div className="flex-grow overflow-y-auto mb-4">
+        <div className="flex flex-col gap-3 overflow-y-auto max-h-[400px] p-3 mb-4 bg-gray-800 rounded-md border border-gray-700">
           {messages.map((m, i) => (
-            <div key={i} className="whitespace-pre-wrap mb-2">
-              <strong>{m.role === "user" ? "User: " : "AI: "}</strong>
+            <div
+              key={i}
+              className={`whitespace-pre-wrap p-3 rounded-lg ${
+                m.role === "user"
+                  ? "bg-blue-600 text-white self-end"
+                  : "bg-gray-700 text-gray-100 self-start"
+              }`}
+            >
+              <strong>{m.role === "user" ? "You: " : "AI: "}</strong>
               {m.content as string}
             </div>
           ))}
         </div>
 
-        <form onSubmit={handleQuestionSubmit} className="flex justify-center">
+        <form onSubmit={handleQuestionSubmit} className="flex gap-2">
           <input
-            className="flex-grow p-2 border border-gray-600 rounded-l bg-gray-800 text-gray-300 placeholder-gray-500 focus:outline-none"
+            className="flex-grow px-4 py-2 rounded-md bg-gray-800 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
             value={input}
             placeholder="Ask a question about the paper..."
             onChange={(e) => setInput(e.target.value)}
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-green-700 text-white rounded-r hover:bg-green-600"
+            className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md font-semibold"
           >
             Ask
           </button>
