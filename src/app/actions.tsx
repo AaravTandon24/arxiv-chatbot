@@ -3,9 +3,9 @@
 import { createStreamableValue } from "ai/rsc";
 import { CoreMessage, generateText, streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { z } from "zod";
-import { text } from "stream/consumers";
+import { JSDOM } from "jsdom";
 
+// Stream conversation
 export async function continueConversation(messages: CoreMessage[]) {
   const result = await streamText({
     model: openai("gpt-4o-mini"),
@@ -16,40 +16,48 @@ export async function continueConversation(messages: CoreMessage[]) {
   return stream.value;
 }
 
-export async function summarise(url: string) {
-  const res = await fetch("https://md.dhr.wtf/?url=" + url, {
+// Fetch HTML content and extract visible text
+async function fetchHTMLText(url: string): Promise<string> {
+  const res = await fetch(url, {
     headers: {
-      "Content-Type": "text/plain",
+      "User-Agent": "Mozilla/5.0",
     },
   });
 
-  const md = await res.text();
+  if (!res.ok) {
+    throw new Error(`Failed to fetch HTML: ${res.statusText}`);
+  }
 
-  const { text } = await generateText({
-    model: openai("gpt-4o-mini"),
-    system: "you are a arxiv research paper summariser",
-    prompt: `summarise this research paper: ${md}`,
-  });
+  const html = await res.text();
+  const dom = new JSDOM(html);
 
-  return { summary: text };
+  // Extract only the visible text from the body
+  return dom.window.document.body.textContent || "";
 }
 
-export async function chatbot(url: string, question: string) {
-  const res = await fetch("https://md.dhr.wtf/?url=" + url, {
-    headers: {
-      "Content-Type": "text/plain",
-    },
+// Summarize HTML page content
+export async function summarise(url: string) {
+  const text = await fetchHTMLText(url);
+
+  const { text: summary } = await generateText({
+    model: openai("gpt-4o-mini"),
+    system: "You are an arXiv research paper summarizer.",
+    prompt: `Summarize this research paper:\n\n${text}`,
   });
 
-  const md = await res.text();
+  return { summary };
+}
 
-  // Adjust the prompt to ensure it can handle general questions
-  const { text } = await generateText({
+// Answer questions based on HTML content
+export async function chatbot(url: string, question: string) {
+  const text = await fetchHTMLText(url);
+
+  const { text: answer } = await generateText({
     model: openai("gpt-4o-mini"),
     system:
-      "You are an assistant specializing in summarizing arXiv research papers. If the user asks for a summary or general information, provide a detailed summary of the paper. If the user asks a specific question, use the provided markdown data to answer it.",
-    prompt: `Here is the arXiv paper in markdown format:\n\n${md}\n\nUser's question: "${question}". If the user is asking for a summary, provide a clear summary.`,
+      "You are an assistant specializing in arXiv research papers. Use the provided content to answer user questions or give a summary if asked.",
+    prompt: `Here is the arXiv paper in HTML format:\n\n${text}\n\nUser's question: "${question}". If the user is asking for a summary, provide a clear summary.`,
   });
 
-  return { answer: text };
+  return { answer };
 }
